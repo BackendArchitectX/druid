@@ -1,0 +1,39 @@
+
+name: Druid 20632 Linux Regression Tests
+
+on:
+  push:
+    branches:
+      - ci/20632-projection-check
+
+permissions:
+  contents: read
+
+jobs:
+  regression-tests:
+    name: Test error propagation on Linux
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+
+      - name: Display Java and Maven versions
+        run: |
+          java -version
+          mvn -version
+
+      - name: Run issue 20632 regression tests
+        run: |
+          mvn -B -ntp -pl :druid-server -am \
+            '-Dtest=CursorFactoryProjectionTest#testTimeseriesQueryMissingNamedProjection,GroupByQueryRunnerFailureTest#testInvalidInputExceptionOnQueryable_multiThreaded,JsonParserIteratorTest*' \
+            '-Dsurefire.failIfNoSpecifiedTests=false' \
+            test
